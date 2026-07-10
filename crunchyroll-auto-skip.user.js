@@ -2,7 +2,7 @@
 // @name         Crunchyroll Auto Skip
 // @namespace    crunchyroll-auto-skip
 // @version      1.1
-// @description  Automatically clicks the Skip Recap / Skip Credits / Skip Intro buttons the moment they become visible
+// @description  Adds a configurable player companion with toggles for auto skipping Recap, Intro and Credits on Crunchyroll.
 // @match        https://www.crunchyroll.com/*
 // @match        https://static.crunchyroll.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=crunchyroll.com
