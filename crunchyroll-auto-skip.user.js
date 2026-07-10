@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Crunchyroll Auto Skip
 // @namespace    crunchyroll-auto-skip
-// @version      1.1
+// @version      1.2
 // @description  Adds a configurable player companion with toggles for auto skipping Recap, Intro and Credits on Crunchyroll.
 // @match        https://www.crunchyroll.com/*
 // @match        https://static.crunchyroll.com/*
@@ -17,7 +17,7 @@
   'use strict';
 
   const TAG = '[Auto Skip]';
-  const VER = '1.1';
+  const VER = '1.2';
 
   const SELECTOR = [
     'button[aria-label="Skip Recap"]',
@@ -26,7 +26,7 @@
   ].join(', ');
 
   const STORAGE_KEY = 'crAutoSkipSettings';
-  const DEFAULTS = { skipRecap: true, skipIntro: true, skipCredits: true, autoPlay: true };
+  const DEFAULTS = { skipRecap: true, skipIntro: true, skipCredits: true, autoPlay: true, maximisePlayer: false };
   let settings = { ...DEFAULTS };
   try {
     settings = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
@@ -119,7 +119,7 @@
       trackVideo(video);
       if (!settings.autoPlay) continue;
       if (autoPlayTried.has(video)) continue;
-      if (video.readyState < 3) continue;       
+      if (video.readyState < 3) continue;
       if (!video.paused || video.ended) continue;
       if (video.played.length > 0) continue;
 
@@ -163,6 +163,35 @@
     });
   }
 
+  const MAX_MARK = 'data-cr-auto-skip-maximised';
+
+  function applyMaximise() {
+    const on = settings.maximisePlayer;
+
+    const header = document.querySelector('header');
+    const headerParent = header?.parentElement;
+    if (headerParent) {
+      if (on && !headerParent.hasAttribute(MAX_MARK)) {
+        headerParent.setAttribute(MAX_MARK, 'display');
+        headerParent.style.setProperty('display', 'none', 'important');
+      } else if (!on && headerParent.getAttribute(MAX_MARK) === 'display') {
+        headerParent.style.removeProperty('display');
+        headerParent.removeAttribute(MAX_MARK);
+      }
+    }
+
+    const playerContainer = document.querySelector('.player-container');
+    if (playerContainer) {
+      if (on && !playerContainer.hasAttribute(MAX_MARK)) {
+        playerContainer.setAttribute(MAX_MARK, 'height');
+        playerContainer.style.setProperty('height', '100vh', 'important');
+      } else if (!on && playerContainer.getAttribute(MAX_MARK) === 'height') {
+        playerContainer.style.removeProperty('height');
+        playerContainer.removeAttribute(MAX_MARK);
+      }
+    }
+  }
+
   const ACCENT = '#f47521';
   let panel = null;
   let hideTimer = null;
@@ -186,6 +215,7 @@
       ['skipRecap', 'Skip Recap'],
       ['skipIntro', 'Skip Intro'],
       ['skipCredits', 'Skip Credits'],
+      ['maximisePlayer', 'Maximise Player'],
       ['autoPlay', 'AutoPlay'],
     ];
 
@@ -215,7 +245,8 @@
         settings[key] = !settings[key];
         saveSettings();
         paint();
-        if (key === 'autoPlay' && settings.autoPay !== false) checkAutoPlay();
+        if (key === 'maximisePlayer') applyMaximise();
+        if (key === 'autoPlay' && settings.autoPlay) checkAutoPlay();
       });
 
       row.append(text, track);
@@ -279,6 +310,7 @@
       deepScan();
       checkAll();
       checkAutoPlay();
+      applyMaximise();
     }, 1000);
   }
 
